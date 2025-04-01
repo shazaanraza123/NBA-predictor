@@ -1,38 +1,50 @@
 from flask import Flask, render_template, request, jsonify
+from flask_cors import CORS
+import logging
 from nba_predictor import NBAPredictor
 from data_collector import NBADataCollector
-import pandas as pd
-import logging
 import os
+import pandas as pd
 import numpy as np
 
+app = Flask(__name__)
+CORS(app)
+
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = Flask(__name__)
-
-# Initialize once at module level
+# Initialize predictor and collector
 try:
     predictor = NBAPredictor()
     collector = NBADataCollector()
+    predictor.load_model()  # Load the model if it exists
     logger.info("Successfully initialized predictor and collector")
 except Exception as e:
-    logger.error(f"Error during initialization: {str(e)}")
-    raise
+    logger.error(f"Error initializing predictor: {str(e)}")
+    predictor = None
+    collector = None
 
 @app.route('/')
 def home():
-    team_names = [team['full_name'] for team in collector.teams_dict]
-    return render_template('index.html', teams=team_names)
+    try:
+        team_names = [team['full_name'] for team in collector.teams_dict]
+        return render_template('index.html', teams=team_names)
+    except Exception as e:
+        logger.error(f"Error rendering home page: {str(e)}")
+        return jsonify({"error": "Internal server error"}), 500
+
+@app.route('/health')
+def health():
+    return jsonify({"status": "healthy"}), 200
 
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
-        data = request.json
+        data = request.get_json()
+        if not predictor:
+            return jsonify({"error": "Predictor not initialized"}), 500
+        
         logger.info(f"Received prediction request: {data}")
         
         home_team_name = data.get('home_team')
@@ -110,27 +122,14 @@ def predict():
         return jsonify(response)
 
     except Exception as e:
-        logger.exception("Error in prediction route")
-        return jsonify({'error': str(e)}), 500
+        logger.error(f"Error making prediction: {str(e)}")
+        return jsonify({"error": "Error making prediction"}), 500
 
-def find_available_port(start_port=5002, max_attempts=100):
-    """Find an available port"""
-    import socket
-    for port in range(start_port, start_port + max_attempts):
-        try:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.bind(('localhost', port))
-            sock.close()
-            return port
-        except OSError:
-            continue
-    raise RuntimeError("Could not find an available port")
+@app.errorhandler(Exception)
+def handle_error(error):
+    logger.error(f"Unhandled error: {str(error)}")
+    return jsonify({'error': 'Internal server error'}), 500
 
 if __name__ == '__main__':
-    # Kill existing Flask processes
-    os.system('pkill -f flask')
-    
-    # Find an available port
-    port = find_available_port()
-    logger.info(f"Starting server on port {port}")
-    app.run(debug=True, port=port) 
+    port = int(os.environ.get('PORT', 5002))
+    app.run(host='0.0.0.0', port=port) 
