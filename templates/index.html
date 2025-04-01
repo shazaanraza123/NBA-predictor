@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>NBA Game Predictor</title>
+    <!-- Add modern font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #FF6B9A, #7366FF);
+            --card-bg: #1E2330;
+            --body-bg: #13151D;
+            --text-primary: #FFFFFF;
+            --text-secondary: #8A8F98;
+            --accent-blue: #4A6CFF;
+            --card-hover: #252B3B;
+            --border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--body-bg);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        h1 {
+            font-size: 3.5em;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 40px;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.02em;
+        }
+
+        .team-section {
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .team-section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            border-color: var(--accent-blue);
+        }
+
+        h2 {
+            font-size: 1.5em;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 20px;
+            letter-spacing: -0.01em;
+        }
+
+        select {
+            width: 100%;
+            padding: 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            background-color: var(--body-bg);
+            color: var(--text-primary);
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            appearance: none;
+        }
+
+        select:hover, select:focus {
+            border-color: var(--accent-blue);
+            outline: none;
+        }
+
+        button {
+            width: 100%;
+            padding: 20px;
+            border: none;
+            border-radius: 12px;
+            background: var(--primary-gradient);
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 30px 0;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(115, 102, 255, 0.3);
+        }
+
+        .prediction-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 30px;
+            margin-top: 30px;
+            border: 1px solid var(--border-color);
+            animation: fadeIn 0.5s ease;
+        }
+
+        .winner-section {
+            text-align: center;
+            padding: 30px;
+            background: linear-gradient(145deg, var(--card-bg), var(--card-hover));
+            border-radius: 16px;
+            margin-bottom: 30px;
+        }
+
+        .stats-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+            margin-top: 20px;
+        }
+
+        .stats-table th {
+            background: var(--body-bg);
+            color: var(--text-secondary);
+            padding: 16px;
+            text-align: left;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .stats-table td {
+            background: var(--body-bg);
+            padding: 16px;
+            color: var(--text-primary);
+        }
+
+        .stats-table tr:hover td {
+            background: var(--card-hover);
+        }
+
+        .key-factors {
+            margin-top: 30px;
+            padding: 20px;
+            background: var(--body-bg);
+            border-radius: 16px;
+        }
+
+        .key-factors ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .key-factors li {
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 8px;
+            background: var(--card-bg);
+            transition: transform 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .key-factors li:hover {
+            transform: translateX(5px);
+        }
+
+        .loading {
+            text-align: center;
+            color: var(--accent-blue);
+            font-size: 1.2em;
+            padding: 30px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Stat value highlights */
+        .stat-value {
+            font-weight: 600;
+            color: #7366FF;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--body-bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--card-hover);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-blue);
+        }
+
+        /* Glass effect for cards */
+        .glass-effect {
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            background: rgba(30, 35, 48, 0.9);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>NBA Game Predictor</h1>
+        
+        <div class="team-section glass-effect">
+            <h2>Home Team</h2>
+            <select id="home_team">
+                <option value="">Select Home Team</option>
+                {% for team in teams %}
+                <option value="{{ team }}">{{ team }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="team-section glass-effect">
+            <h2>Away Team</h2>
+            <select id="away_team">
+                <option value="">Select Away Team</option>
+                {% for team in teams %}
+                <option value="{{ team }}">{{ team }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button onclick="predict()">Predict Winner</button>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        async function predict() {
+            const homeTeam = document.getElementById('home_team').value;
+            const awayTeam = document.getElementById('away_team').value;
+
+            if (!homeTeam || !awayTeam) {
+                alert('Please select both teams');
+                return;
+            }
+
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div class="loading" style="animation: pulse 1.5s infinite;">Analyzing game data...</div>';
+            resultDiv.className = 'visible';
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        home_team: homeTeam,
+                        away_team: awayTeam
+                    })
+                });
+
+                const result = await response.json();
+
+                const formatNumber = (num) => Number(num).toFixed(1);
+                const formatPercent = (num) => (Number(num) * 100).toFixed(1);
+
+                resultDiv.innerHTML = `
+                    <div class="prediction-card glass-effect">
+                        <div class="winner-section">
+                            <h3 style="font-size: 2em; margin-bottom: 15px; color: #7366FF;">Prediction Result</h3>
+                            <div style="font-size: 1.8em; margin: 15px 0; font-weight: 600;">
+                                ${result.winner}
+                            </div>
+                            <div style="font-size: 1.4em; color: #4A6CFF;">
+                                ${formatNumber(result.win_probability)}% probability
+                            </div>
+                        </div>
+
+                        <h3 style="font-size: 1.5em; margin: 30px 0 20px; color: #7366FF;">Team Statistics</h3>
+                        <div class="stats-table-wrapper" style="overflow-x: auto;">
+                            <table class="stats-table">
+                                <tr>
+                                    <th>Statistic</th>
+                                    <th style="text-align: right;">${homeTeam}</th>
+                                    <th style="text-align: right;">${awayTeam}</th>
+                                </tr>
+                                <tr>
+                                    <td>Points Per Game</td>
+                                    <td class="stat-value" style="text-align: right;">${formatNumber(result.home_stats.pts_per_game)}</td>
+                                    <td class="stat-value" style="text-align: right;">${formatNumber(result.away_stats.pts_per_game)}</td>
+                                </tr>
+                                <tr>
+                                    <td>Field Goal %</td>
+                                    <td class="stat-value" style="text-align: right;">${formatPercent(result.home_stats.fg_pct)}%</td>
+                                    <td class="stat-value" style="text-align: right;">${formatPercent(result.away_stats.fg_pct)}%</td>
+                                </tr>
+                                <tr>
+                                    <td>3-Point %</td>
+                                    <td class="stat-value" style="text-align: right;">${formatPercent(result.home_stats.fg3_pct)}%</td>
+                                    <td class="stat-value" style="text-align: right;">${formatPercent(result.away_stats.fg3_pct)}%</td>
+                                </tr>
+                                <tr>
+                                    <td>Free Throw %</td>
+                                    <td class="stat-value" style="text-align: right;">${formatPercent(result.home_stats.ft_pct)}%</td>
+                                    <td class="stat-value" style="text-align: right;">${formatPercent(result.away_stats.ft_pct)}%</td>
+                                </tr>
+                                <tr>
+                                    <td>Rebounds (Off/Def)</td>
+                                    <td class="stat-value" style="text-align: right;">${formatNumber(result.home_stats.oreb)}/${formatNumber(result.home_stats.dreb)}</td>
+                                    <td class="stat-value" style="text-align: right;">${formatNumber(result.away_stats.oreb)}/${formatNumber(result.away_stats.dreb)}</td>
+                                </tr>
+                                <tr>
+                                    <td>Assists</td>
+                                    <td class="stat-value" style="text-align: right;">${formatNumber(result.home_stats.ast)}</td>
+                                    <td class="stat-value" style="text-align: right;">${formatNumber(result.away_stats.ast)}</td>
+                                </tr>
+                                <tr>
+                                    <td>Steals</td>
+                                    <td class="stat-value" style="text-align: right;">${formatNumber(result.home_stats.stl)}</td>
+                                    <td class="stat-value" style="text-align: right;">${formatNumber(result.away_stats.stl)}</td>
+                                </tr>
+                                <tr>
+                                    <td>Blocks</td>
+                                    <td class="stat-value" style="text-align: right;">${formatNumber(result.home_stats.blk)}</td>
+                                    <td class="stat-value" style="text-align: right;">${formatNumber(result.away_stats.blk)}</td>
+                                </tr>
+                                <tr>
+                                    <td>Recent Form</td>
+                                    <td class="stat-value" style="text-align: right;">${formatPercent(result.home_stats.recent_form)}%</td>
+                                    <td class="stat-value" style="text-align: right;">${formatPercent(result.away_stats.recent_form)}%</td>
+                                </tr>
+                                <tr>
+                                    <td>Win Streak</td>
+                                    <td class="stat-value" style="text-align: right;">${result.home_stats.winning_streak}</td>
+                                    <td class="stat-value" style="text-align: right;">${result.away_stats.winning_streak}</td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <div class="key-factors">
+                            <h3 style="font-size: 1.5em; margin-bottom: 20px; color: #7366FF;">Key Factors</h3>
+                            <ul>
+                                <li style="color: ${result.key_factors.home_advantage ? '#7366FF' : '#FF6B9A'}">
+                                    ${result.key_factors.home_advantage ? '✓' : '✗'} Home Court Advantage
+                                </li>
+                                <li style="color: ${result.key_factors.better_scoring ? '#7366FF' : '#FF6B9A'}">
+                                    ${result.key_factors.better_scoring ? '✓' : '✗'} Scoring Advantage
+                                </li>
+                                <li style="color: ${result.key_factors.better_defense ? '#7366FF' : '#FF6B9A'}">
+                                    ${result.key_factors.better_defense ? '✓' : '✗'} Defensive Advantage
+                                </li>
+                                <li style="color: ${result.key_factors.better_form ? '#7366FF' : '#FF6B9A'}">
+                                    ${result.key_factors.better_form ? '✓' : '✗'} Better Recent Form
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.innerHTML = `
+                    <div style="padding: 20px; background: #ff5252; border-radius: 10px; color: white;">
+                        Error: ${error.message}
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html> 
